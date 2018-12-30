@@ -1,0 +1,2305 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title> Howl's Moving Castle </title>
+    <!-- all styling for the page in this link -->
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script src="libs/three.min.js"></script>
+    <!-- omit dat.gui and OrbitControls if you don't need them -->
+    <script src="libs/OrbitControls.js"></script>
+    <script src="libs/dat.gui.min.js"></script>
+    <script src="libs/tw.js"></script>
+  </head>
+<body>
+
+<div id = "title">
+  <h1>Howl's Moving Castle</h1>
+  <p> Click keys 1-5 to view different perspectives</p>
+</div>
+
+<script>
+// scene
+var scene = new THREE.Scene();
+var renderer = new THREE.WebGLRenderer();
+TW.mainInit(renderer,scene);
+
+// =============================================================================
+// Room Dimension Parameters
+
+var roomDim = {
+    width:200,
+    depth: 100,
+    height:125
+};
+
+//Prop dimension parameters
+var propDim = {
+  w1:35,
+  h1:25,
+  d1:50,
+  wbox:70,
+  hbox:20,
+  dbox:40,
+  shadeRadius:20,
+  height:40,
+  radiusCylinder:3,
+  radiusCup:5,
+  bowlRadius:20,
+  bheight:10,
+  toolRad1:5,
+  toolRad2:3,
+  theight:30
+};
+
+// =============================================================================
+// Texture Loader
+var loader = new THREE.TextureLoader();
+
+// =============================================================================
+// Camera
+
+// setup camera parameters
+//there are five different perspectives, so we have 5 different camera settings in these parameters
+var cameraParams = {
+    near: 5,
+    far: roomDim.depth*4,
+    fov: [75,75,75,75,75],
+    aspectRatio: 1900/950,
+
+    atX: [0,0,0,0,0],
+    atY: roomDim.height/3.75,
+    atZ: 0,
+
+    eyeX: [roomDim.width/15, roomDim.width/3,-roomDim.width/3,-roomDim.width/3,roomDim.width/4],
+    eyeY: [roomDim.height/3,roomDim.height/3,roomDim.height/3,roomDim.height/2,roomDim.height/1.25],
+    eyeZ: [1.75*roomDim.depth,1.5*roomDim.depth,1.25*roomDim.depth,roomDim.depth,1.25*roomDim.depth],
+
+    upX: [0,0,0,0,0],
+    upY: [1,1,1,1,1],
+    upZ: [0,0,0,0,0],
+};
+
+function setupCamera (cameraParameters, camNum) {
+    // set up an abbreviation
+    var cp = cameraParameters;
+
+    // create an initial camera with the desired shape
+    var camera = new THREE.PerspectiveCamera(cp.fov[camNum],
+                                             cp.aspectRatio,
+                                             cp.near,
+                                             cp.far);
+
+    // set the camera location and orientation
+    camera.position.set(cp.eyeX[camNum], cp.eyeY[camNum], cp.eyeZ[camNum]);
+    camera.up.set(cp.upX[camNum], cp.upY[camNum], cp.upZ[camNum]);
+    camera.fov = cp.fov[camNum];
+
+    camera.lookAt(new THREE.Vector3(cp.atX[camNum], cp.atY, cp.atZ));
+
+    // update camera
+    camera.updateProjectionMatrix();
+    return camera;
+}
+
+// create camera
+var camera = setupCamera(cameraParams, 0);
+scene.add(camera);
+
+//render
+function render() {
+    renderer.render(scene,camera);
+};
+
+//lag the renderer a bit so that the textures and all objects have time to load
+window.setTimeout(render,5000);
+
+// =============================================================================
+// UI CONTROLS
+// =============================================================================
+
+function selectSlide1(){
+    camera = setupCamera(cameraParams, 0);
+    render();
+}
+function selectSlide2(){
+    camera = setupCamera(cameraParams, 1);
+    render();
+}
+function selectSlide3(){
+    camera = setupCamera(cameraParams, 2);
+    render();
+}
+function selectSlide4(){
+    camera = setupCamera(cameraParams, 3);
+    render();
+}
+function selectSlide5(){
+    camera = setupCamera(cameraParams, 4);
+    render();
+}
+
+TW.setKeyboardCallback('1', selectSlide1, "select slide");
+TW.setKeyboardCallback('2', selectSlide2, "select slide");
+TW.setKeyboardCallback('3', selectSlide3, "select slide");
+TW.setKeyboardCallback('4', selectSlide4, "select slide");
+TW.setKeyboardCallback('5', selectSlide5, "select slide");
+
+
+</script>
+
+<!-- Load Room Section Files -->
+<script src="lighting.js"></script>
+<script src="howl/texture.js"></script>
+<script src="howl/section1.js"></script>
+<script src="howl/section2.js"></script>
+<script src="howl/section3.js"></script>
+<script src="howl/section4.js"></script>
+<script src="howl/section5.js"></script>
+
+
+<script>
+  //section1
+  var chandelier = chandelier(30);
+  scene.add(chandelier);
+
+  var ceiling = ceilingBeams(roomDim.width, 2, 10);
+  scene.add(ceiling);
+
+  //section2
+  var stool = stool(20);
+  scene.add(stool);
+
+  var table = table(50,50,70, propDim);
+  scene.add(table);
+
+  //section3
+  var room = room(roomDim.width,roomDim.depth,roomDim.height);
+  scene.add(room);
+
+  var steps = steps(roomDim.width,roomDim.height,roomDim.depth);
+  scene.add(steps);
+
+  var railing = createRailing();
+  scene.add(railing);
+
+  var spinner = createSpinner(3,5);
+  scene.add(spinner);
+
+  //section4
+  var hearthBase = makeHearthBase(20, 30);
+  scene.add(hearthBase);
+
+  var logBox = logBox(25, 15, 20);
+  scene.add(logBox);
+
+  //section5
+  var pan = pan(20,50);
+  scene.add(pan);
+
+  var box = box(15,30,30);
+  scene.add(box);
+
+  var chair = chair(40);
+  scene.add(chair);
+
+  var clothedChair = createClothedChair(30,6,18);
+  scene.add(clothedChair);
+
+</script>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- keep all the bootstrap stuff for responsiveness -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel = "stylesheet" href = "main.css"> <!-- this is the one css file you will use -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  </head>
+  <body>
+    <!-- make sure you have the photo (.jpg, .png, etc.) in the same directory (folder) as your html file -->
+    <!-- also always put an alt for img tags so that visually impaired users can still access your content! -->
+    <img src = "images/banner.png" alt = "a screenshot of our howl's moving castle project" id = "banner">
+    <div class="container-fluid" id = "outer"> <!--outer container that takes up the entire size of the body -->
+      <div class ="container-fluid" id = "inner"> <!--inner container "centered" on the page-->
+        <h1> Howl’s Moving Castle </h1> <!-- main title -->
+        <p> By <b> Havannah Tran and Amber Skarjune</b> </p> <!-- by line -->
+
+        <h2> Introduction </h2> <!-- first section -->
+        <p> <a href = "https://en.wikipedia.org/wiki/Howl%27s_Moving_Castle_(film)">
+          Howl’s Moving Castle (2004)</a> is a Studio Ghibli film
+          directed by Hayao Miyazaki roughly based on the
+          novel by the same name by Dianne Wynne Jones.
+          Most of the film occurs in this moving castle owned
+          by the titular character, a magical man named Howl.
+          Our project is a modeling of one of the rooms in the film at night.
+        </p>
+
+        <p> Here is <a href = "demo.html"> <b> our demo </b> </a>.</p>
+        <img src =  "images/screenshot.png" alt = "a screenshot of Howl's Castle's interior">
+
+
+      <br>
+      <br>
+       <h2> Development </h2>
+      <p> Here is our <b> <a href = "https://docs.google.com/document/d/1v6m6uK5QB4KcqfWuWchTFChAnRSkypSD63k8EgeR7sA/edit"
+        >explicit development plan on Google docs </b> </a>,
+        if you'd like to see it.
+        First, we created the plain room out of planes.
+        We created the illusion of a window and stairs by
+        creating these appendages to the room (as seen below). </p>
+    <img src =  "images/blankroom.png" alt = "the empty room before we added any components">
+    <img src =  "images/appendages.png" alt = "the room from the back showing the appendages for the stairs
+    and window">
+
+    <br>
+    <p>
+    The stairs are a composite object of multiple rectangles.Then we created each of
+    the objects in the room:
+    the tale, the stool, the chair, the pan on the wall, the spinner,
+    the hearth, etc. Each of these, like the stairs is a composite object.</p>
+
+    <img src =  "images/chair.png" alt = "an image of a chair with 4 legs">
+    <img src =  "images/pan.png" alt = "a pan hanging off the wall">
+
+    <br>
+    <p> The props on the table in particular are composed of
+      even more small composite objects, for ease of positioning.</p>
+
+    <img src =  "images/props.png" alt = "an assemblage of different props including
+    books, bowls, candle holders, and a bottle">
+
+    <br>
+    <p> The ceiling is an amalgamation of many rectangles. </p>
+
+    <img src =  "images/ceiling.png" alt = "a ceiling made of wooden bars">
+
+    <br>
+    <p> We added textures to all the objects that needed a little more
+      detail such as the carpet, the table, the tapestry, and more. </p>
+
+    <img src =  "images/tapestry.png" alt = "a tapestry with a golden intricate pattern">
+
+    <br>
+    <p> We added a plane behind our room with an image of a night sky,
+      which could be seen through the transparent window. </p>
+
+
+   </div> <!-- inner div end -->
+ </div> <!-- outer div -->
+  </body>
+</html>
+// =============================================================================
+// Lighting
+// =============================================================================
+
+//addLighting: add the ambient and directional light to the scene
+//returns nothing
+function addLighting(){
+    //ambient
+    var ambLight = new THREE.AmbientLight(0x2e78f7, .2);
+    scene.add(ambLight)
+    
+    //directional
+    var directionalLight = new THREE.DirectionalLight(0x3dc8ff, 0.25);
+    directionalLight.position.set(0.5, 0.5, 1);
+    scene.add(directionalLight);
+    
+}
+addLighting();
+#outer{
+  width:100%;
+}
+
+#inner {
+  width:70%;
+}
+
+img{
+  width:100%;
+}
+
+#pseudo {
+  list-style-type:none;
+  padding:0px;
+}
+
+#pseudo li{
+  border-bottom: 1px solid black;
+  padding:10px;
+  width:50%;
+}
+a{
+  color:black;
+}
+
+a:visited{
+  color:black;
+}
+#title{
+  color:white;
+  position:fixed;
+  bottom: 5%;
+  left: 2.5%;
+}
+
+body{
+  background-color:black;
+  font-family:sans-serif;
+}
+canvas {
+  display: block;
+  margin: 10px auto;
+  width: 100%;
+  height: 100%;
+}
+// =============================================================================
+// Segment 1 - Ceiling
+// =============================================================================
+
+//chandelier: create the chandelier object
+//one parameter: width (integer)
+//returns an Object3D
+function chandelier(width){
+    var chandelier = new THREE.Object3D();
+    var chandelierMaterial = new THREE.MeshPhongMaterial( { color: 0x726c58,
+                                                            side: THREE.DoubleSide,
+                                                            shininess: 100});
+
+    //base chandelier ring
+    var ringGeom = new THREE.TorusGeometry( width/2, width/12, 3, 100 );
+    var ringMesh = new THREE.Mesh(ringGeom, chandelierMaterial);
+    ringMesh.castShadow = true;
+    ringMesh.receiveShadow = true;
+    chandelier.add(ringMesh);
+
+    //chandelier top
+    var topGeom = new THREE.CylinderGeometry(width/5, width/5, width/16, 32, 32, false);
+    var topMesh = new THREE.Mesh(topGeom, chandelierMaterial);
+    topMesh.castShadow = true;
+    topMesh.receiveShadow = true;
+    chandelier.add(topMesh);
+
+    //candle: create chandelier candle holders
+    //one parameter: width (integer)
+    //returns a mesh
+    function candle(width){
+        var candleGeom = new THREE.CylinderGeometry(width/14, width/14, width/10, 32, 32, false);
+        var candleMesh = new THREE.Mesh(candleGeom, chandelierMaterial);
+        candleMesh.castShadow = true;
+        candleMesh.receiveShadow = true;
+        return candleMesh;
+    }
+
+    //string: create chandelier string
+    //one parameter: height (integer)
+    //returns a mesh
+    function string(height){
+        var stringGeom = new THREE.CylinderGeometry(0.5, 0.5, height, 32, 32);
+        var stringMesh = new THREE.Mesh(stringGeom, chandelierMaterial);
+        stringMesh.castShadow = true;
+        stringMesh.receiveShadow = true;
+        return stringMesh;
+    }
+
+    //add the various candles
+    var candle1 = candle(width);
+    var candle2 = candle(width);
+    var candle3 = candle(width);
+    var candle4 = candle(width);
+    var candle5 = candle(width);
+    var candle6 = candle(width);
+    var candle7 = candle(width);
+    var candle8 = candle(width);
+
+    var string1 = string(width);
+    var string2 = string(width);
+    var string3 = string(width);
+    var string4 = string(width);
+
+    chandelier.add(candle1);
+    chandelier.add(candle2);
+    chandelier.add(candle3);
+    chandelier.add(candle4);
+    chandelier.add(candle5);
+    chandelier.add(candle6);
+    chandelier.add(candle7);
+    chandelier.add(candle8);
+
+    chandelier.add(string1);
+    chandelier.add(string2);
+    chandelier.add(string3);
+    chandelier.add(string4);
+
+    //Position chandelier elements
+    ringMesh.rotation.x = Math.PI/2;
+    topMesh.position.y = width-width/16;
+
+    //cross
+    candle1.position.set(width/2, width/16, 0);
+    candle2.position.set(-width/2, width/16, 0);
+    candle3.position.set(0, width/16, width/2);
+    candle4.position.set(0, width/16, -width/2);
+
+    //diagonals
+    candle5.position.set(Math.cos(45)*(width/2 + width/6), width/16, Math.cos(45)*(width/2 + width/6));
+    candle6.position.set(-Math.cos(45)*(width/2 + width/6), width/16, Math.cos(45)*(width/2 + width/6));
+    candle7.position.set(Math.cos(45)*(width/2 + width/6), width/16, -Math.cos(45)*(width/2 + width/6));
+    candle8.position.set(-Math.cos(45)*(width/2 + width/6), width/16, -Math.cos(45)*(width/2 + width/6));
+
+    //strings
+    string1.position.set(width/3, width/2, 0);
+    string2.position.set(-width/3, width/2, 0);
+    string3.position.set(0, width/2, width/3);
+    string4.position.set(0, width/2, -width/3);
+    string1.rotation.z = Math.PI/8;
+    string2.rotation.z = -Math.PI/8;
+    string3.rotation.x = -Math.PI/8;
+    string4.rotation.x = Math.PI/8;
+
+    //position chandelier
+    chandelier.position.y = roomDim.height - width - width/16;
+    chandelier.position.z = roomDim.depth/8;
+
+    return chandelier;
+};
+
+//ceilingBeams: create the roof detailing object
+//three parameters: width (integer), height (width), and depth(width) of each bar
+//returns an Object3D
+
+function ceilingBeams(width, height, depth){
+    var ceiling = new THREE.Object3D();
+
+    function beam(width, height, depth){
+        var barGeom = new THREE.BoxGeometry(width, height, depth);
+        var barMaterial = new THREE.MeshPhongMaterial( { color: 0x726c58, side: THREE.DoubleSide });
+
+        var barMesh = new THREE.Mesh(barGeom, barMaterial);
+        return barMesh;
+    };
+
+    //create bars
+    var bar1 = beam(width, height, depth);
+    var bar2 = beam(width, height, depth);
+    var bar3 = beam(width, height, depth);
+    var bar4 = beam(width, height, depth);
+    var bar5 = beam(width, height, depth);
+    var bar6 = beam(depth, height, width);
+
+    //handling the double sized room depth
+    var position = roomDim.depth;
+    var space = depth*2;
+
+    //position bar
+    bar1.position.set(0, 0, -position/2);
+    bar2.position.set(0, 0, -position/2 + 2*space);
+    bar3.position.set(0, 0, -position/2 + 4*space);
+    bar4.position.set(0, 0, -position/2 + 6*space);
+    bar5.position.set(0, 0, -position/2 + 8*space);
+    bar6.position.set(0, 0, position/2);
+
+    //add bars to ceiling object
+    ceiling.add(bar1);
+    ceiling.add(bar2);
+    ceiling.add(bar3);
+    ceiling.add(bar4);
+    ceiling.add(bar5);
+    ceiling.add(bar6);
+
+    //position ceiling object
+    ceiling.position.y = roomDim.height - height/2;
+    ceiling.position.z = depth/2;
+
+    return ceiling;
+};
+// =============================================================================
+// Segment 2 - Left Side Room
+// =============================================================================
+
+//tapestry: make the wall tapestry object
+//three parameters: width (integer), height (integer), and texture (image file)
+//does not return anything, adds the tapestry to the scene
+function tapestry(width, height, texture){
+    var tapGeom = new THREE.PlaneGeometry(width, height);
+    var tapMaterial = new THREE.MeshPhongMaterial( { color: 0xaaaaaa, side: THREE.DoubleSide, map: texture[2] });
+    var tapMesh = new THREE.Mesh(tapGeom, tapMaterial)
+
+    //for the texture mapping to work properly, add to the scene
+    scene.add(tapMesh);
+
+    //position tapestry
+    tapMesh.rotation.y = Math.PI/2;
+    tapMesh.position.set(-roomDim.width/2+0.1, roomDim.height/2, roomDim.depth/3);
+};
+
+//stool: make the stool
+//one parameter: height (integer)
+//returns Object3D
+function stool(height){
+    var stool = new THREE.Object3D();
+    var stoolMaterial = new THREE.MeshPhongMaterial( { color: 0x654321, side: THREE.DoubleSide });
+
+    var seatGeom = new THREE.CylinderGeometry(height/2, height/2, height/12, 32, 32);
+    var seatMesh = new THREE.Mesh(seatGeom, stoolMaterial);
+    stool.add(seatMesh);
+
+    var legOneGeom = new THREE.CylinderGeometry(height/12, height/12, height, 32, 32);
+    var legOneMesh = new THREE.Mesh(legOneGeom, stoolMaterial);
+    legOneMesh.position.x = height/2;
+    legOneMesh.position.y = -height/2;
+    legOneMesh.position.z = 0;
+    legOneMesh.rotation.z = Math.PI/16;
+    stool.add(legOneMesh);
+
+    var legTwoGeom = new THREE.CylinderGeometry(height/12, height/12, height, 32, 32);
+    var legTwoMesh = new THREE.Mesh(legTwoGeom, stoolMaterial);
+    legTwoMesh.position.x = -height/2;
+    legTwoMesh.position.y = -height/2;
+    legTwoMesh.position.z = 0;
+    legTwoMesh.rotation.z = -Math.PI/16;
+    stool.add(legTwoMesh);
+
+    var legThreeGeom = new THREE.CylinderGeometry(height/12, height/12, height, 32, 32);
+    var legThreeMesh = new THREE.Mesh(legThreeGeom, stoolMaterial);
+    legThreeMesh.position.x = 0;
+    legThreeMesh.position.y = -height/2;
+    legThreeMesh.position.z = height/2;
+    legThreeMesh.rotation.x = -Math.PI/16;
+    stool.add(legThreeMesh);
+
+    var legFourGeom = new THREE.CylinderGeometry(height/12, height/12, height, 32, 32);
+    var legFourMesh = new THREE.Mesh(legFourGeom, stoolMaterial);
+    legFourMesh.position.x = 0;
+    legFourMesh.position.y = -height/2;
+    legFourMesh.position.z = -height/2;
+    legFourMesh.rotation.x = Math.PI/16;
+    stool.add(legFourMesh);
+
+    //position the stool
+    stool.position.x = -roomDim.width/5;
+    stool.position.y = height;
+    stool.position.z = roomDim.depth/2;
+
+    return stool;
+
+};
+
+// beginning of code for white bottle
+//modified from the coke bottle code in class
+
+//props points for the bezier curves
+var upper_cp = [ [0.5/2, 5],
+                 [0.5/2, 3.0],
+                 [1.5/2, 2.0],
+                 [1.5/2, 1.5] ];
+
+// middle curve, from upper bulge [above] to dent with diameter 1.25" at height 1.25"
+
+middle_cp = [ [1.5/2,  1.5],
+              [1.5/2,  1.5],
+              [1/2, .4],
+              [1.25/2, .3] ];
+
+// lower curve, from dent to base, with a radius the same as the bulge
+
+lower_cp = [ [1.25/2, .3],
+             [1.25/2, .2],
+             [1.5/2,  0.1],
+             [1/2,  0] ];
+
+var bottlePts = Array.prototype.concat(upper_cp, middle_cp, lower_cp);
+
+//createWhiteBottle: creating the small white bottle to the left of the props
+//no parameters
+//returns Object3D
+function createWhiteBottle(){
+    //make the array for the points
+    function makePoints (pts) {
+       var points = [];
+       for(var i = 0; i < pts.length; i++) {
+           points.push(new THREE.Vector3(pts[i][0], pts[i][1], 0));
+       }
+       return points;
+    }
+
+    var bottlePoints = makePoints(bottlePts);
+
+// create a spline curve to use for the lathe geometry
+
+    var splineObj;
+
+    function makeSplineObj (points) {
+       var mat = new THREE.MeshBasicMaterial( {color: 0xff0000} );
+       // var curve = new THREE.SplineCurve3(points);
+       var curve1 = new THREE.CubicBezierCurve3(points[0],points[1],points[2],points[3]);
+       var curve2 = new THREE.CubicBezierCurve3(points[4],points[5],points[6],points[7]);
+       var curve3 = new THREE.CubicBezierCurve3(points[8],points[9],points[10],points[11]);
+       var geom = new THREE.Geometry();
+       // geom.vertices = curve.getPoints(50);
+       geom.vertices = Array.prototype.concat( curve1.getPoints(10),
+                                               curve2.getPoints(10),
+                                               curve3.getPoints(10) );
+       splineObj = new THREE.Line( geom, new THREE.LineBasicMaterial( { linewidth: 3, color: 0x0000ff }) );
+    }
+
+    makeSplineObj(bottlePoints);
+
+// create a lathe geometry using the spline curve
+
+    var latheObj;
+
+    function makeLatheObj() {
+       var geom = new THREE.LatheGeometry(splineObj.geometry.vertices);
+       var mat1 = new THREE.MeshPhongMaterial( {color: 0xffffff, side: THREE.DoubleSide});
+       latheObj = new THREE.Mesh(geom, mat1);
+        return latheObj;
+    }
+    var bottle = makeLatheObj();
+    bottle.scale.set(8,8,8);
+    return bottle;
+
+}
+
+//createBook: make the book object (just one)
+//three parameters: width (integer), height (integer), depth (integer)
+//returns Object3D
+function createBook(width,height,depth){
+    //create the holders for the object
+    var book = new THREE.Object3D();
+    var bookCover = new THREE.Object3D();
+
+    //make the book cover and binding
+    var coverGeom = new THREE.BoxGeometry(width, height/5, depth);
+    var coverMat = new THREE.MeshPhongMaterial({ color: 0x4c4225, side: THREE.DoubleSide });
+    var coverMesh = new THREE.Mesh(coverGeom, coverMat);
+
+    var coverMesh2 = coverMesh.clone();
+    coverMesh2.position.y = 2/5*height + height/4;
+
+    var sideGeom = new THREE.BoxGeometry(height/5, 3/4*height, depth);
+    var sideMesh = new THREE.Mesh(sideGeom, coverMat);
+
+    sideMesh.position.x = -width/2 + height/10;
+    sideMesh.position.y = 3/8*height;
+
+    //add the cover
+    bookCover.add(sideMesh);
+    bookCover.add(coverMesh);
+    bookCover.add(coverMesh2);
+
+    //make the pages inside
+    var pageGeom = new THREE.BoxGeometry(.9*width, .60*height, .9*depth);
+    var pageMat = new THREE.MeshPhongMaterial( { color: 0xdbdbd2, side: THREE.DoubleSide });
+    var pageMesh = new THREE.Mesh(pageGeom, pageMat);
+
+    //position the pages so they are inside the cover
+    pageMesh.position.y = .5*.75*height;
+
+    //add everything to the mesh
+    book.add(bookCover);
+    book.add(pageMesh);
+
+    return book;
+}
+
+//createBox: make the box object (just one)
+//three parameters: w1 (integer), h1 (integer), d1 (integer)
+//return Object3D
+function createBox(w1,h1,d1){
+    var box = new THREE.Object3D();
+
+    //make the box itself
+    var boxGeom = new THREE.BoxGeometry(w1, h1, d1);
+    var boxMat = new THREE.MeshPhongMaterial({ color: 0x56491f, side: THREE.DoubleSide });
+    var boxMesh = new THREE.Mesh(boxGeom, boxMat);
+
+    //make the lid
+    var topGeom = new THREE.BoxGeometry(1.1*w1, .3*h1,1.1*d1);
+    var topMesh = new THREE.Mesh(topGeom, boxMat);
+
+    topMesh.position.y = .3/2*h1 + h1/2;
+    box.add(boxMesh);
+    box.add(topMesh);
+
+    return box;
+}
+
+//createCandleHolder: make the candle holder object
+//three parameters: height (integer), radiusCylinder (integer, this is of the stand)
+//,radiusCup (integer, this is of the little dishes on the side)
+//return Object3D 
+function createCandleHolder(height,radiusCylinder,radiusCup){
+
+    //create the holders for all the components of the candle holder
+    var candleHolder = new THREE.Object3D();
+    var prong = new THREE.Object3D();
+    var line = new THREE.Object3D();
+    var baseDetails = new THREE.Object3D();
+
+    //create the materials
+    var candleHolderMat = new THREE.MeshPhongMaterial({ color: 0x7c6b36, side: THREE.DoubleSide});
+    var lineMat = new THREE.MeshPhongMaterial({ color: 0x7c6b36, linewidth: 100 });
+
+    //make the center piece
+    var candleHolderGeom = new THREE.CylinderGeometry(radiusCylinder, radiusCylinder, height, 32, 32);
+    var candleHolderMesh = new THREE.Mesh(candleHolderGeom, candleHolderMat);
+
+    //make the top dish
+    var topCandleGeom = new THREE.ConeBufferGeometry( radiusCylinder, height, 32);
+    var topCandleMesh = new THREE.Mesh(topCandleGeom, candleHolderMat);
+    candleHolderMesh.position.y = height/2;
+    topCandleMesh.position.y = height/4 + height;
+
+    //base details
+    var baseGeom = new THREE.TorusGeometry( 1.5*radiusCylinder, radiusCylinder, 16, 100 );
+    var baseMesh = new THREE.Mesh( baseGeom, candleHolderMat);
+    baseMesh.rotation.x = Math.PI/2;
+
+    baseMesh2 = baseMesh.clone();
+    baseMesh2.scale.set(.75,.75,.75);
+    baseMesh2.position.y = radiusCylinder;
+    baseMesh3 = baseMesh2.clone();
+    baseMesh2.scale.set(.75,.75,.75);
+    baseMesh3.position.y = radiusCylinder;
+
+    baseDetails.add(baseMesh);
+    baseDetails.add(baseMesh2);
+    baseDetails.add(baseMesh3);
+
+    //make the sides
+    //there are two sections for the wires that hold up the dishes
+    //controlPoints1 and controlPoints2 are the two sections
+    var controlPoints1 = [
+                      [0,5,0],
+                      [1,2,0],
+                      [2,.5,0],
+                      [3,0,0]
+                      ];
+    var curveGeom1 = TW.createBezierCurve(controlPoints1,20);
+
+    var curve1 = new THREE.Line( curveGeom1,lineMat);
+
+    var controlPoints2 = [ [3,0,0],
+                      [3.5,-.5,0],
+                      [4,-.5,0],
+                      [4.5,0,0] ];
+
+    var curveGeom2 = TW.createBezierCurve(controlPoints2,20);
+
+    var curve2 = new THREE.Line( curveGeom2, lineMat);
+
+    var controlPoints3 = [[4.5,0,0],
+                        [5,1,0],
+                        [6,4,0],
+                        [7,9,0]];
+
+    var curveGeom3 = TW.createBezierCurve(controlPoints3,20);
+
+    var curve3 = new THREE.Line(curveGeom3, lineMat);
+
+    //make the holder for each side
+    var smallHolderGeom = new THREE.SphereGeometry(radiusCup, 32, 32, 0, Math.PI * 2, 0, -Math.PI/2);
+    var smallHolderMesh = new THREE.Mesh(smallHolderGeom, candleHolderMat);
+
+    smallHolderMesh.rotation.z = Math.PI;
+    var topHolder = smallHolderMesh.clone();
+    topHolder.position.y = .87*(height*2);
+
+    //add all the components to the holder we made in the beginning
+    smallHolderMesh.position.y = 20;
+    smallHolderMesh.position.x = 14;
+
+    line.add(curve1);
+    line.add(curve2);
+    line.add(curve3);
+    line.scale.set(2,2,0);
+    prong.add(line);
+    prong.add(smallHolderMesh);
+
+    prong.position.y = height;
+    prong.position.x = radiusCylinder/3;
+
+
+    prong2 = prong.clone();
+    prong2.scale.set(-1,1,1);
+    prong2.position.x = -radiusCylinder/3;
+
+
+    candleHolder.add(topHolder);
+    candleHolder.add(candleHolderMesh);
+    candleHolder.add(baseDetails);
+    candleHolder.add(topCandleMesh);
+    candleHolder.add(prong);
+    candleHolder.add(prong2);
+
+    return candleHolder;
+}
+
+//createLamp: make the lamp object
+//one parameter: shadeRadius (integer)
+//return Object3D
+function createLamp(shadeRadius){
+    //make the parent holder object
+    var lamp = new THREE.Object3D();
+
+    //make the shade
+    var lampMat = new THREE.MeshPhongMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide });
+    var lampShadeGeom = new THREE.SphereGeometry(shadeRadius, 32, 32, 0, Math.PI * 2, 0, Math.PI/2);
+    var lampShadeMesh = new THREE.Mesh(lampShadeGeom, lampMat);
+
+    //the bottom is basically another half circle
+    lampBottomMesh = lampShadeMesh.clone();
+
+    //make the stand
+    var standGeom = new THREE.SphereGeometry(shadeRadius/2, 32, 32);
+    var lampStandMesh = new THREE.Mesh(standGeom, lampMat);
+    lampStandMesh.scale.set(.5,2,.5);
+
+    //add the notch at the top
+    var topGeom = new THREE.CylinderGeometry(shadeRadius/4, shadeRadius/4, shadeRadius/8, 32, 32);
+    var topMesh = new THREE.Mesh(topGeom, lampMat);
+    topMesh.position.y = shadeRadius;
+
+    //add it all together
+    topShade = topMesh.clone();
+    topShade.position.y = 1.75*shadeRadius;
+
+    lampShadeMesh.position.y = .75*shadeRadius;
+
+    lamp.add(lampBottomMesh);
+    lampBottomMesh.scale.set(.5,.5,.5);
+    lampBottomMesh.position.y = -shadeRadius;
+
+    lamp.add(topShade);
+    lamp.add(topMesh);
+    lamp.add(lampShadeMesh);
+    lamp.add(lampStandMesh)
+
+    return lamp;
+}
+
+//createBowl: make the bowl object
+//five parameters: bowlRadius (integer),bheight (integer),
+//toolRad1 (integer),toolRad2 (integer),theight (integer)
+//return Object3D
+function createBowl(bowlRadius,bheight,toolRad1,toolRad2,theight){
+    //make the parent objects
+    var bowl = new THREE.Object3D();
+    var tool = new THREE.Object3D();
+
+    //make the bowl as a half sphere that is double sided
+    var bowlGeom = new THREE.SphereGeometry(bowlRadius, 32, 32, 0, Math.PI * 2, 0, Math.PI/2);
+    var bowlMat = new THREE.MeshPhongMaterial({ color: 0x000000, side: THREE.DoubleSide });
+    var bowlMesh = new THREE.Mesh(bowlGeom, bowlMat);
+    bowlMesh.rotation.z = Math.PI;
+
+    //make the tool with a cylinder and two half spheres
+    var toolMat = new THREE.MeshPhongMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide });
+    var baseToolGeom = new THREE.CylinderGeometry(toolRad1, toolRad2, theight, 32, 32);
+    var topToolGeom = new THREE.SphereGeometry(toolRad1, 32, 32, 0, Math.PI * 2, 0, Math.PI/2);
+    var baseToolMesh = new THREE.Mesh(baseToolGeom,toolMat);
+    var topToolMesh = new THREE.Mesh(topToolGeom, toolMat);
+
+    //put it all together and position it properly
+    baseToolMesh.position.y = theight/2;
+    topToolMesh.position.y = theight;
+    tool.add(topToolMesh);
+    tool.add(baseToolMesh);
+
+    //make the rotation so that the tool rests on the side of the bowl
+    tool.rotation.z = 2/3*Math.PI + 1/10*Math.PI;
+    tool.position.y = theight/4;
+    tool.position.x = bowlRadius;
+
+    bowl.add(bowlMesh);
+    bowl.add(tool);
+
+    return bowl;
+}
+
+//createStacked: create a subset of the final props
+//three parameters: wbox (integer), hbox (integer), dbox (integer)
+//everything will be placed relative to the box dimensions
+//return Object3D
+function createStacked(wbox,hbox,dbox){
+    //create the parent object
+    var subProps = new THREE.Object3D();
+
+    //make the box
+    var box = createBox(wbox,hbox,dbox);
+    box.position.y = (3/2*hbox + hbox/2)/4;
+    subProps.add(box);
+
+    //make some books
+    var book3 = createBook(dbox,hbox,wbox);
+
+    book3.rotation.y = Math.PI/2;
+    book3.position.y = (3/2*hbox + hbox/2)/4 + hbox/1.25;
+    subProps.add(book3);
+
+    var book4 = createBook(wbox/2,hbox,dbox);
+    book4.position.y = (3/2*hbox + hbox/2)/4 + 2*hbox/1.25;
+    book4.position.x = -dbox/2 + hbox/5;
+    subProps.add(book4);
+
+    return subProps;
+}
+
+//createProps: make all the subProps
+//one parameter: list of parameters
+//return Object3D
+function createProps(list){
+    //make props parent object
+    var completeProps = new THREE.Object3D();
+    completeProps.name = "complete props";
+
+    //make some books on the side
+    var book1 = createBook(list.w1,list.h1,list.d1);
+    var book2 = createBook(list.w1,list.h1,list.d1);
+    book2.rotation.x = -Math.PI/2;
+    book2.rotation.z = Math.PI/2;
+
+    book1.position.y = (list.h1/5)/2;
+
+    book2.position.y = list.h1;
+    book2.position.z = -list.d1;
+    book2.position.x = list.w1;
+
+    completeProps.add(book1);
+    completeProps.add(book2);
+
+    //make those sub props from earlier
+    var props = createStacked(70,20,40);
+    props.position.z = -list.d1;
+    props.position.x = -list.wbox/2 + (list.w1/2 - list.h1/5);
+    completeProps.add(props);
+
+    //make the bottle using the modified coke code
+    var bottle = createWhiteBottle();
+    bottle.position.x = -list.wbox;
+    bottle.position.y = .025*list.hbox;
+    bottle.position.z = -list.dbox/2;
+    completeProps.add(bottle);
+
+    //make the lamp
+    var lamp = createLamp(list.shadeRadius);
+    lamp.position.y = list.shadeRadius + 1.6*list.h1;
+    lamp.position.z = -list.d1;
+    completeProps.add(lamp);
+
+    //make the candleHolder
+    var candleHolder = createCandleHolder(list.height,list.radiusCylinder,list.radiusCup);
+    candleHolder.position.y = list.radiusCylinder + 2.25*list.h1;
+    candleHolder.position.z = -list.d1;
+    candleHolder.position.x = -1.25*list.w1;
+    completeProps.add(list.candleHolder);
+
+    //need to add bowl + spoons
+    var bowl = createBowl(list.bowlRadius,list.bheight,list.toolRad1,list.toolRad2,list.theight);
+    bowl.position.y = list.bowlRadius;
+    bowl.position.x = 2*list.bowlRadius;
+    completeProps.add(bowl);
+
+    return completeProps;
+}
+
+
+//table: make all the table and props
+//four parameters: width (integer), height (integer), depth (integer), list (list)
+//return Object3D
+function table(width, height, depth, list){
+    // make the parent object
+    var table = new THREE.Object3D();
+
+    //for debugging purposes, name the object to see if it was added to the scene
+    table.name = "table";
+    var tableMaterial = new THREE.MeshPhongMaterial( { color: 0x654321, side: THREE.DoubleSide });
+
+    //make the table top
+    var tableTopGeom = new THREE.BoxGeometry(width, height/12, depth, 32, 32);
+    var tableTopMesh = new THREE.Mesh(tableTopGeom, tableMaterial);
+    table.add(tableTopMesh);
+
+    //make components of the legs
+    var tableBarGeom = new THREE.BoxGeometry(width/12, height/5, depth, 32, 32);
+    var tableBarMesh = new THREE.Mesh(tableBarGeom, tableMaterial);
+    table.add(tableBarMesh);
+    tableBarMesh.position.y= -height/3;
+
+    //sub function to help with creating the leg geometries
+    function tableLeg(height, depth){
+      var leg = new THREE.Object3D();
+
+      var topGeom = new THREE.RingGeometry(height/2-height/3, height/3, 32, 1, 0, Math.PI);
+      var topMesh = new THREE.Mesh(topGeom, tableMaterial);
+      topMesh.rotation.x = Math.PI;
+
+      var bottomGeom = new THREE.RingGeometry(height/2-height/3, height/3, 32, 1, 0, Math.PI);
+      var bottomMesh = new THREE.Mesh(bottomGeom, tableMaterial);
+      bottomMesh.position.y = -height+height/3;
+
+      leg.add(topMesh);
+      leg.add(bottomMesh);
+
+      return leg
+    }
+
+    var leftLeg = tableLeg(height, width);
+    var rightLeg = tableLeg(height, width);
+
+    leftLeg.position.z= depth/2;
+    rightLeg.position.z= -depth/2;
+
+    //add table legs
+    table.add(leftLeg);
+    table.add(rightLeg);
+
+    //adding props
+    var props = createProps(list);
+    props.scale.set(.25,.25,.25);
+    props.position.y = height/24;
+    props.position.z = depth/6;
+    props.position.x = width/5;
+    props.rotation.y = Math.PI/2;
+    table.add(props);
+
+    //position table
+    table.position.x = -roomDim.width/3;
+    table.position.y = height-height/3;
+    table.position.z = roomDim.depth/2;
+
+    return table;
+};
+// =============================================================================
+// Segment 3 - Room Base
+// =============================================================================
+
+//room: creates room object with given room dimensions
+//three parameters: width (integer), depth (integer), height (integer)
+//returns an Object3D
+function room(width, depth, height){
+    //whole room object
+    var wholeRoom = new THREE.Object3D();
+
+    /* Floor * seg 1, seg 2, seg 3*/
+    var floorMaterial = new THREE.MeshPhongMaterial({side: THREE.DoubleSide, color: 0x726c58});
+    //seg 1
+    var floorGeom1 = new THREE.PlaneGeometry(2/3*width, depth);
+    var floorMesh1 = new THREE.Mesh(floorGeom1, floorMaterial);
+    floorMesh1.rotation.x = Math.PI/2;
+
+    wholeRoom.add(floorMesh1);
+    floorMesh1.position.x =-1/6*width;
+
+    //seg 2
+    var floorGeom2 = new THREE.PlaneGeometry(1/6*width, depth/2);
+    var floorMesh2 = new THREE.Mesh(floorGeom2, floorMaterial);
+    floorMesh2.rotation.x = Math.PI/2;
+
+    wholeRoom.add(floorMesh2);
+    floorMesh2.position.x =+1/4*width;
+    floorMesh2.position.z =+depth/4;
+
+    //seg 3
+    var floorGeom3 = new THREE.PlaneGeometry(1/6*width, depth);
+    var floorMesh3 = new THREE.Mesh(floorGeom3, floorMaterial);
+    floorMesh3.rotation.x = Math.PI/2;
+
+    wholeRoom.add(floorMesh3);
+    floorMesh3.position.x =+(width/2 - width/12);
+
+
+    /* Ceiling */
+    var ceilingGeom = new THREE.PlaneGeometry(width, depth);
+    var ceilingMesh = new THREE.Mesh(ceilingGeom, floorMaterial);
+
+    ceilingMesh.rotation.x = Math.PI/2;
+
+    wholeRoom.add(ceilingMesh);
+    ceilingMesh.position.y = height;
+
+    //expanding the size of the room
+    ceilingMesh2 = ceilingMesh.clone();
+    wholeRoom.add(ceilingMesh2);
+    ceilingMesh2.position.y = height;
+    ceilingMesh2.position.z = depth;
+
+    /*adding more floor*/
+    floorMeshExtend = ceilingMesh.clone();
+    wholeRoom.add(floorMeshExtend);
+    ceilingMesh2.position.y = 0;
+    floorMeshExtend.position.z = depth;
+
+     /* Left Wall */
+    var lWallGeom = new THREE.PlaneGeometry(depth, height, 32 );
+    var lWallMaterial = new THREE.MeshPhongMaterial({side: THREE.DoubleSide, color: 0xd1c4a3});
+    var lWallMesh = new THREE.Mesh(lWallGeom, lWallMaterial);
+
+    lWallMesh.rotation.x = Math.PI/2;
+    lWallMesh.rotation.y = Math.PI/2;
+    lWallMesh.rotation.z = Math.PI/2;
+
+    wholeRoom.add(lWallMesh);
+
+    lWallMesh.position.x = -width/2;
+    lWallMesh.position.y = height/2;
+
+    //double the size of the room
+    lWall2Mesh = lWallMesh.clone();
+
+    wholeRoom.add(lWall2Mesh);
+
+    lWall2Mesh.position.x = -width/2;
+    lWall2Mesh.position.y = height/2;
+    lWall2Mesh.position.z = depth;
+
+
+    /* Right Wall */
+    var rWallMesh = new THREE.Mesh(lWallGeom, lWallMaterial);
+
+    rWallMesh.rotation.x = Math.PI/2;
+    rWallMesh.rotation.y = Math.PI/2;
+    rWallMesh.rotation.z = Math.PI/2;
+
+    wholeRoom.add(rWallMesh);
+    rWallMesh.position.x = width/2;
+    rWallMesh.position.y = height/2;
+
+    //double the size of the room
+    rWall2Mesh = rWallMesh.clone();
+
+    wholeRoom.add(rWall2Mesh);
+
+    rWall2Mesh.position.x = width/2;
+    rWall2Mesh.position.y = height/2;
+    rWall2Mesh.position.z = depth;
+
+    /* Back Wall - Divided into 7 segments to accomodate Window and Door */
+
+    //seg1
+    var seg1Geom = new THREE.PlaneGeometry(width/4, height, 32 );
+    var seg1Material = new THREE.MeshPhongMaterial({color: 0xd1c4a3, side: THREE.DoubleSide});
+    var seg1Mesh = new THREE.Mesh(seg1Geom, seg1Material);
+
+    wholeRoom.add(seg1Mesh)
+    seg1Mesh.position.x = -width/2 + width/8;
+    seg1Mesh.position.y = height/2;
+    seg1Mesh.position.z = -depth/2;
+
+    //seg2
+    var seg2Geom = new THREE.PlaneGeometry(width/4, height/3, 32 );
+    var seg2Material = new THREE.MeshPhongMaterial({color: 0xd1c4a3, side: THREE.DoubleSide});
+    var seg2Mesh = new THREE.Mesh(seg2Geom, seg2Material);
+
+    wholeRoom.add(seg2Mesh)
+    seg2Mesh.position.x = -width/8;
+    seg2Mesh.position.y = height/2 + height/3;
+    seg2Mesh.position.z = -depth/2;
+
+    //needed to double the size of the room
+
+    //seg3 - Window Object (Box Geometry)
+    function makeWindow(height,width,depth, textures){
+        var winGeom = new THREE.Object3D();
+        var winMat = new THREE.MeshPhongMaterial( { color: 0x654321, side: THREE.DoubleSide });
+
+        var windowGeom = new THREE.BoxGeometry(width/4,height/3,depth/4);
+        var materialArray = [];
+
+        var side = [THREE.BackSide, THREE.BackSide, THREE.BackSide, THREE.BackSide, THREE.BackSide, THREE.FrontSide];
+
+        for(var i = 0; i < 6; i++) {
+          materialArray.push(new THREE.MeshPhongMaterial({
+                                 color: 0xd1c4a3,
+                                 side: side[i],
+          }));
+        };
+
+        var windowMaterial = new THREE.MeshFaceMaterial(materialArray);
+        var windowMesh = new THREE.Mesh(windowGeom, windowMaterial);
+
+        var barThickness = height/20;
+        var barWidth = width/4;
+        var barHeight = height/3;
+
+        //window cross
+        var barHGeom = new THREE.PlaneGeometry(barWidth, barThickness);
+        var barVGeom = new THREE.PlaneGeometry(barThickness, barHeight);
+
+        var barTopMesh = new THREE.Mesh(barHGeom, winMat);
+        var barBotMesh = new THREE.Mesh(barHGeom, winMat);
+        var barLeftMesh = new THREE.Mesh(barVGeom, winMat);
+        var barRightMesh = new THREE.Mesh(barVGeom, winMat);
+        var barHMesh = new THREE.Mesh(barHGeom, winMat);
+        var barVMesh = new THREE.Mesh(barVGeom, winMat);
+        winGeom.add(windowMesh);
+
+        winGeom.add(barTopMesh);
+        barTopMesh.position.y = barHeight/2 - barThickness/2;
+        barTopMesh.position.z = -depth/8;
+
+        winGeom.add(barBotMesh);
+        barBotMesh.position.y = - barHeight/2 + barThickness/2;
+        barBotMesh.position.z = -depth/8;
+
+        winGeom.add(barLeftMesh);
+        barLeftMesh.position.x = - barWidth/2 + barThickness/2;
+        barLeftMesh.position.z = -depth/8;
+
+        winGeom.add(barRightMesh);
+        barRightMesh.position.x = barWidth/2 - barThickness/2;
+        barRightMesh.position.z = -depth/8;
+
+        winGeom.add(barHMesh);
+        barHMesh.position.z = -depth/8;
+
+        winGeom.add(barVMesh);
+        barVMesh.position.z = -depth/8;
+
+        return winGeom;
+        };
+
+    var win = makeWindow(height,width,depth);
+
+    wholeRoom.add(win);
+    win.position.x= -width/8;
+    win.position.y= height/2;
+    win.position.z= -(depth/2 + depth/8) ;
+
+    //seg4
+    var seg4Geom = new THREE.PlaneGeometry(width/4, height/3, 32 );
+    var seg4Material = new THREE.MeshPhongMaterial({color: 0xd1c4a3, side: THREE.DoubleSide});
+    var seg4Mesh = new THREE.Mesh(seg4Geom, seg4Material);
+
+    wholeRoom.add(seg4Mesh)
+    seg4Mesh.position.x = -width/8;
+    seg4Mesh.position.y = height/2 - height/3;
+    seg4Mesh.position.z = -depth/2;
+
+    //seg5
+    var seg5Geom = new THREE.PlaneGeometry(width/6, height, 32 );
+    var seg5Material = new THREE.MeshPhongMaterial({color: 0xd1c4a3, side: THREE.DoubleSide});
+    var seg5Mesh = new THREE.Mesh(seg5Geom, seg5Material);
+
+    wholeRoom.add(seg5Mesh)
+    seg5Mesh.position.x = width/12;
+    seg5Mesh.position.y = height/2;
+    seg5Mesh.position.z = -depth/2;
+
+    //seg6 - Bezier Curve above doorway
+    var sqW = width/18;
+    var sqH = height/4;
+    var topToBottom = [
+        [ [0,0,0],  [sqW,0,0],  [sqW*2,0,0],  [sqW*3,0, 0] ],
+        [ [0,-sqH,0], [sqW,-sqH,0],  [sqW*2,-sqH,0],  [sqW*3, -sqH, 0] ],
+        [ [0,-sqH*2,0], [sqW,-sqH*2,0],  [sqW*2,-sqH*2,0],  [sqW*3, -sqH*2, 0] ],
+        [ [0,-sqH*3,0], [sqW,-sqH*3+sqH/2,0], [sqW*2,-sqH*3+sqH/2,0], [sqW*3, -sqH*3, 0] ],
+    ];
+
+    var seg6Geom = new THREE.BezierSurfaceGeometry( topToBottom.reverse(), 10, 10 );
+    var seg6Material  = new THREE.MeshPhongMaterial( { color: 0xd1c4a3, side: THREE.DoubleSide } )
+    var seg6Mesh = new THREE.Mesh( seg6Geom, seg6Material );
+
+    wholeRoom.add(seg6Mesh);
+    seg6Mesh.position.x = 1/6*width;
+    seg6Mesh.position.y = 1/4*height + (2*height*(3/8));
+    seg6Mesh.position.z = -1/4*width;
+
+    //seg7
+    var seg7Geom = new THREE.PlaneGeometry(width/6, height, 32 );
+    var seg7Material = new THREE.MeshPhongMaterial({color: 0xd1c4a3, side: THREE.DoubleSide});
+    var seg7Mesh = new THREE.Mesh(seg7Geom, seg7Material);
+
+    wholeRoom.add(seg7Mesh)
+    seg7Mesh.position.x = width/2 - width/12;
+    seg7Mesh.position.y = height/2;
+    seg7Mesh.position.z = -depth/2;
+
+    return wholeRoom;
+};
+
+//door: make the doorway including the arc element of the door and texture
+//four parameters: width (integer), depth (integer), height (integer), textures (image file)
+//returns an Object3D
+function door(width, depth, height, textures){
+    var wholeDoor = new THREE.Object3D();
+
+    //door arch (Bezier)
+    var sqW = width/18;
+    var sqH = height/4;
+    var drop = height/12;
+
+    var doorDepthSeg = 1/3*depth*1/2;
+    var topToBottom = [
+        [ [0, 0 - 3*drop ,0],              [1*sqW, sqH/2 - 3*drop ,0],              [2*sqW, sqH/2 - 3*drop ,0],               [3*sqW, 0 - 3*drop, 0] ],
+        [ [0, 0 - 2*drop ,1*doorDepthSeg], [1*sqW, sqH/2 - 2*drop ,1*doorDepthSeg], [2*sqW, sqH/2 - 2*drop ,1*doorDepthSeg],  [3*sqW, 0 - 2*drop, 1*doorDepthSeg] ],
+        [ [0, 0 - 1*drop ,2*doorDepthSeg], [1*sqW, sqH/2 - 1*drop ,2*doorDepthSeg], [2*sqW, sqH/2 - 1*drop , 2*doorDepthSeg], [3*sqW, 0 - 1*drop, 2*doorDepthSeg] ],
+        [ [0, 0 - 0*drop ,3*doorDepthSeg], [1*sqW, sqH/2 - 0*drop ,3*doorDepthSeg], [2*sqW, sqH/2 - 0*drop ,3*doorDepthSeg],  [3*sqW, 0 - 0*drop, 3*doorDepthSeg] ],
+    ];
+
+    var archGeom = new THREE.BezierSurfaceGeometry( topToBottom.reverse(), 10, 10 );
+    var archMaterial = new THREE.MeshPhongMaterial( { color: 0xd1c4a3, side: THREE.DoubleSide } );
+    var archMesh = new THREE.Mesh(archGeom, archMaterial);
+
+    scene.add(archMesh);
+    archMesh.position.x = 1/6*width;
+    archMesh.position.y = 1/4*height;
+    archMesh.position.z = -depth;
+
+
+    //door decoration
+    var topToBottom1 = [
+        [ [0,0,0],  [sqW,0,0],  [sqW*2,0,0],  [sqW*3,0, 0] ],
+        [ [0,-sqH,0], [sqW,-sqH,0],  [sqW*2,-sqH,0],  [sqW*3, -sqH, 0] ],
+        [ [0,-sqH*2,0], [sqW,-sqH*2,0],  [sqW*2,-sqH*2,0],  [sqW*3, -sqH*2, 0] ],
+        [ [0,-sqH*3,0], [sqW,-sqH*3+sqH/2,0], [sqW*2,-sqH*3+sqH/2,0], [sqW*3, -sqH*3, 0] ],
+    ];
+
+    var wArchGeom = new THREE.BezierSurfaceGeometry( topToBottom1.reverse(), 10, 10 );
+    var wArchMaterial = new THREE.MeshPhongMaterial( { color: 0x654321, side: THREE.DoubleSide } );
+    var wArchMesh = new THREE.Mesh(wArchGeom, wArchMaterial);
+
+    wArchMesh.position.x = 1/6*width;
+    wArchMesh.position.y = 1/4*height + (2*height*(3/8)) - 35;
+    wArchMesh.position.z = -depth;
+    scene.add(wArchMesh);
+
+    //door knob
+    var knob = new THREE.Object3D();
+
+    var knobGeom = new THREE.CylinderGeometry(sqW/16,sqW/16, sqH/8, 32 );
+    var knobMat = new THREE.MeshPhongMaterial( { color:0x3d3d3d, side: THREE.DoubleSide } );
+    var knobMesh = new THREE.Mesh(knobGeom, knobMat);
+
+    knobMesh.rotation.x = Math.PI/2;
+    knobMesh.rotation.z = Math.PI/2;
+
+    knobMesh.position.x = 1/5*width;
+    knobMesh.position.y = 1/80*height - 20 ;
+    knobMesh.position.z = -depth + 1;
+
+    scene.add(knobMesh);
+    
+    // door
+    var topToBottom2 = [
+        [ [0,-sqH,0],[sqW,-sqH,0], [sqW*2,-sqH,0], [sqW*3,-sqH, 0] ],
+        [ [0,-sqH,0],   [sqW,-sqH,0],     [sqW*2,-sqH,0],    [sqW*3, -sqH, 0] ],
+        [ [0,-sqH*2,0], [sqW,-sqH*2,0],   [sqW*2,-sqH*2,0],  [sqW*3, -sqH*2, 0] ],
+        [[0,-sqH*2,0], [sqW,-sqH*2,0],   [sqW*2,-sqH*2,0],  [sqW*3, -sqH*2, 0]]
+    ];
+
+    var doorGeom = new THREE.BezierSurfaceGeometry( topToBottom2.reverse(), 10, 10 );
+    var doorMaterial  = new THREE.MeshPhongMaterial( { color: 0xd1c4a3, side: THREE.DoubleSide, map: textures[3] } )
+    var doorMesh = new THREE.Mesh( doorGeom, doorMaterial );
+
+    //brown window mesh
+    var doorMaterialWindow  = new THREE.MeshPhongMaterial( { color: 0x654321, side: THREE.DoubleSide } )
+    var doorMeshWindow = new THREE.Mesh(doorGeom, doorMaterialWindow);
+
+    scene.add(doorMeshWindow);
+    doorMeshWindow.position.x = 1/6*width;
+    doorMeshWindow.position.y = 1/4*height + 1;
+    doorMeshWindow.position.z = -depth - 10;
+
+
+    var windowBarGeom = new THREE.PlaneGeometry(2,10);
+    var windowBarMesh = new THREE.Mesh(windowBarGeom, doorMaterialWindow);
+
+    windowBarMesh.position.x = 1/3.5*width;
+    windowBarMesh.position.y = 1/20*height;
+    windowBarMesh.position.z = -depth;
+
+    var windowBarMesh2 = windowBarMesh.clone();
+    windowBarMesh2.position.x = 1/3.5*width - 5;
+
+    var windowBarMesh3 = windowBarMesh2.clone();
+    windowBarMesh3.position.x = 1/3.5*width - 10;
+
+    var windowBarMesh4 = windowBarMesh3.clone();
+    windowBarMesh4.position.x = 1/3.5*width - 15;
+
+    var windowBarMesh5 = windowBarMesh4.clone();
+    windowBarMesh5.rotation.z = Math.PI/2;
+    windowBarMesh5.position.y =+5;
+    windowBarMesh5.scale.set(1,10,1);
+
+    scene.add(windowBarMesh5);
+    scene.add(windowBarMesh4);
+    scene.add(windowBarMesh3);
+    scene.add(windowBarMesh2);
+    scene.add(windowBarMesh);
+
+    scene.add(doorMesh);
+    doorMesh.position.x = 1/6*width;
+    doorMesh.position.y = 1/4*height;
+    doorMesh.position.z = -depth;
+
+    //helper function to make triangles on the sides
+    function makeTriangle(A1, A2, A3, B1, B2, B3, C1, C2, C3){
+        var geom = new THREE.Geometry();
+        var v1 = new THREE.Vector3(A1,A2,A3);
+        var v2 = new THREE.Vector3(B1,B2,B3);
+        var v3 = new THREE.Vector3(C1,C2,C3);
+
+        geom.vertices.push(v1);
+        geom.vertices.push(v2);
+        geom.vertices.push(v3);
+
+        geom.faces.push( new THREE.Face3( 0, 1, 2 ) );
+        geom.computeFaceNormals();
+
+        var geomMaterial  = new THREE.MeshPhongMaterial( { color: 0xd1c4a3, side: THREE.DoubleSide } )
+
+        var mesh = new THREE.Mesh( geom, geomMaterial);
+        return mesh;
+    }
+
+    var lTriangle = makeTriangle(0,depth/3,0,0,0,0,depth/2,0,0);
+    lTriangle.rotation.y = Math.PI/2;
+
+    scene.add(lTriangle);
+
+    lTriangle.position.x =+width/6;
+    lTriangle.position.z =-depth/2;
+
+    var rTriangle = lTriangle.clone();
+
+    scene.add(rTriangle);
+
+    rTriangle.position.x =+width/3;
+    rTriangle.position.z =-depth/2;
+}
+
+//steps: make the steps for the room in the doorframe
+//three parameters: width (integer), height (integer), depth (integer)
+//returns an Object3D
+function steps(width,height,depth){
+    var wholeSteps = new THREE.Object3D;
+
+    var genMaterial  = new THREE.MeshPhongMaterial( { color: 0xd1c4a3, side: THREE.DoubleSide } );
+
+    //bottom
+    var bottomGeom = new THREE.PlaneGeometry(width/6,depth);
+    var bottomMesh = new THREE.Mesh(bottomGeom, genMaterial);
+
+    bottomMesh.rotation.x = Math.PI/2;
+    wholeSteps.add(bottomMesh);
+
+    bottomMesh.position.x =+1/4*width;
+    bottomMesh.position.z =-depth/2;
+    bottomMesh.position.y=-height/4;
+
+    //left wall
+     var lWallGeom = new THREE.PlaneGeometry(depth,height/4);
+     var lWallMesh = new THREE.Mesh(lWallGeom, genMaterial);
+
+     lWallMesh.rotation.y = Math.PI/2;
+     wholeSteps.add(lWallMesh);
+
+     lWallMesh.position.x =+1/4*width - width/12;
+     lWallMesh.position.z = -depth/2;
+     lWallMesh.position.y=-height/8;
+
+     //right wall
+     var rWallGeom = new THREE.PlaneGeometry(depth,height/4);
+     var rWallMesh = new THREE.Mesh(lWallGeom, genMaterial);
+
+     rWallMesh.rotation.y = Math.PI/2;
+     wholeSteps.add(rWallMesh);
+
+     rWallMesh.position.x =+1/4*width + width/6 - width/12;
+     rWallMesh.position.z = -depth/2;
+     rWallMesh.position.y=-height/8;
+
+     //back
+     var backGeom = new THREE.PlaneGeometry(width/6,height/4);
+     var backMesh = new THREE.Mesh(backGeom, genMaterial);
+
+     wholeSteps.add(backMesh);
+
+     backMesh.position.x =+1/4*width;
+     backMesh.position.y=-height/8;
+
+    // makeStairs: create stairway
+    // two parameters: height (int), depth (int)
+    // returns an Object3D
+     function makeStairs(height, depth){
+        var steps = new THREE.Object3D();
+        var stepMaterial = new THREE.MeshPhongMaterial( {color: 0xd1c4a3} );
+
+        for (i = 0; i < 8; i++){
+            var newHeight = height/4 - (i*height/32);
+            var stepGeom = new THREE.BoxGeometry(-.01+width/6, newHeight, 3/32*depth);
+            var stepMesh = new THREE.Mesh( stepGeom, stepMaterial );
+            steps.add(stepMesh);
+            stepMesh.position.y=+newHeight/2;
+            stepMesh.position.z =+i*3/32*depth;
+        }
+        steps.rotation.y = Math.PI;
+        wholeSteps.add(steps);
+        steps.position.x =+(width/6 + width/12);
+        steps.position.y =-(-.01+height/4);
+    }
+    makeStairs(roomDim.height, roomDim.depth);
+    return wholeSteps;
+}
+
+/* Back Wall Decorations */
+
+// createRailing: create stairway Railing
+// no parameters
+// returns an Object3D
+function createRailing(){
+    var bothRails = new THREE.Object3D();
+
+    //createOneRailing: make one vertical bar for the railing
+    //four parameters: height (integer), width (integer), depth (integer), longWidth (integer)
+    function createOneRailing(height, width, depth, longWidth){
+        //make the parent object
+        var Railing = new THREE.Object3D();
+        var RailMaterial = new THREE.MeshPhongMaterial( { color: 0x000000, side: THREE.DoubleSide });
+
+        //createTop: make top railing
+        //two parameters: height (integer), width (integer)
+        //returns an Object3D
+        function createTop (height,width){
+            var top = new THREE.Object3D();
+
+            //railing
+            var columnGeom = new THREE.CylinderGeometry(width/40, width/40, height, 32, 32, false);
+            var columnMesh = new THREE.Mesh(columnGeom, RailMaterial);
+
+            //make the horizontal rails
+            for (var i = 0; i < 10; i++){
+                var clone = columnMesh.clone();
+                top.add(clone);
+                clone.position.x = i*width/40 + i*3/32*depth;
+            }
+
+            //top
+            var columnGeom2 = new THREE.CylinderGeometry(width/40, width/40, height + width, 32, 32, false);
+            var columnMesh2 = new THREE.Mesh(columnGeom2, RailMaterial);
+
+            columnMesh2.rotation.z = Math.PI/2;
+            columnMesh2.position.y = height/2;
+            columnMesh2.position.x = (height + width)/2;
+
+            top.add(columnMesh2);
+
+            return top;
+        }
+
+        //createSide: make side railing
+        //three parameters: height (integer), width (integer), depth (integer)
+        // returns an Object3D
+        function createSide(height,width, depth){
+            //create the parent object
+            var sideRail = new THREE.Object3D();
+
+            //make all the vertical poles
+            for (i = 0; i < 10; i++){
+                var newHeight = 4*(height/4 - (i*height/32));
+                var newColGeom = new THREE.CylinderGeometry(width/40, width/40, height + width/20, 32, 32, false);
+                var newColMesh = new THREE.Mesh(newColGeom, RailMaterial);
+
+                newColMesh.position.y=+newHeight/2;
+                newColMesh.position.z =+(i*width/40 + i*3/32*depth);
+                sideRail.add(newColMesh);
+            }
+
+            //create the top of the bottome rail
+            var colGeomTop = new THREE.CylinderGeometry(width/40, width/40, height + width, 32, 32, false);
+            var colGeomMesh = new THREE.Mesh(colGeomTop,RailMaterial);
+            colGeomMesh.position.z = (height + width)/2.25;
+            colGeomMesh.rotation.x = -Math.PI/2.75;
+            colGeomMesh.position.y = height/1.25;
+
+            sideRail.add(colGeomMesh);
+            return sideRail;
+        }
+
+        var top = createTop(height, width);
+        Railing.add(top);
+
+        var side = createSide(height, width, depth);
+        side.rotation.y = Math.PI/2;
+        side.position.y = -.75*depth;
+        Railing.add(side);
+
+        return Railing;
+    }
+
+    var railing = createOneRailing(30,20,40);
+
+    railing.rotation.y = Math.PI/2;
+    railing.position.x = roomDim.width/6;
+    railing.position.y = roomDim.height/20;
+    railing.position.z = -roomDim.depth/14;
+
+    var railing2 = railing.clone();
+    railing2.position.x = 2*roomDim.width/6;
+
+    bothRails.add(railing);
+    bothRails.add(railing2);
+
+    return bothRails;
+};
+
+// createSpinner: create stairway Railing
+// two parameters: height (integer), width (integer)
+// returns an Object3D
+//there are a number of helper functions inside createSpinner
+function createSpinner(height, width){
+    var wholeSpinner = new THREE.Object3D;
+
+    var SpinnerNotch = new THREE.Object3D();
+    var Spinner = new THREE.Object3D();
+    var spinMaterial = new THREE.MeshPhongMaterial( { color: 0xF6F6F6, shininess: 1000, side: THREE.DoubleSide });
+
+    // createSpin: create the pan bottom
+    // two parameters: height (integer), width (integer)
+    // returns mesh
+    function createSpin(width,height){
+        var spinGeom = new THREE.CylinderGeometry(width, width, height, 32, 32, false );
+        var spinMesh = new THREE.Mesh(spinGeom, spinMaterial);
+        return spinMesh;
+    }
+
+    // createSpinExtend: create the top of the pan
+    // two parameters: width (integer), height (integer)
+    // returns a mesh
+    function createSpinExtend(width,height){
+        var spinExtendGeom = new THREE.ConeBufferGeometry(width, height, 32, 32, false );
+        var spinExtendMesh = new THREE.Mesh(spinExtendGeom, spinMaterial);
+        return spinExtendMesh;
+    }
+
+    // createTop: create the notch on top of the pan
+    // two parameters: width (integer), height (integer)
+    // returns a mesh
+    function createTop(width,height){
+        var topGeom = new THREE.CylinderGeometry(width/8, width/8, height/5, 32, 32, false );
+        var topMaterial = new THREE.MeshPhongMaterial( { color: 0xD2D2D2, side: THREE.DoubleSide });
+        var topMesh = new THREE.Mesh(topGeom, topMaterial);
+        return topMesh;
+    }
+
+    // createNotch: create the top notch that holds the spinner to the wall
+    // two parameters: height (integer), width (integer)
+    // returns an Object3D
+    function createNotch(height,width){
+        var notch = new THREE.Object3D();
+        notchGeom = new THREE.CylinderGeometry( width/5, width/5, width, 32, 32, false );
+        notchMaterial = new THREE.MeshPhongMaterial( { color: 0x000000, side: THREE.DoubleSide });
+        notchMesh = new THREE.Mesh(notchGeom, notchMaterial);
+
+        sphereGeom = new THREE.SphereGeometry(width/3, 32, 32);
+        sphereMesh = new THREE.Mesh(sphereGeom, notchMaterial);
+
+        sphereMesh.position.y = width/2;
+
+        notch.add(notchMesh);
+        notch.add(sphereMesh);
+
+        return notch;
+    }
+
+    // createHand: create the handle
+    // two parameters: height (integer), width (integer)
+    // returns a mesh
+    function createHand(height,width){
+        handGeom = new THREE.CylinderGeometry( width/8, width/8, 2.5*width, 32, 32, false );
+        handMaterial = new THREE.MeshPhongMaterial( { color: 0x000000, side: THREE.DoubleSide });
+        handMesh = new THREE.Mesh(handGeom, handMaterial);
+
+        return handMesh;
+    }
+
+    // create the spinner objects
+    var spin = createSpin(width,height);
+    var spinExtend = createSpinExtend(width,height);
+    var notch = createNotch(width,height);
+    var top = createTop(width,height);
+    var hand = createHand(height,width);
+
+    // position objects
+    spinExtend.position.y = height;
+    notch.position.z = -5/4*width;
+    notch.rotation.x = Math.PI/2;
+
+    top.position.y = 1.5*height;
+
+    hand.position.z = 5/4*width;
+    hand.rotation.x = Math.PI/2;
+
+    //add the spinner components to the spinner
+    SpinnerNotch.add(spin);
+    SpinnerNotch.add(spinExtend);
+    SpinnerNotch.add(hand);
+    SpinnerNotch.add(top);
+
+    //rotate the spinner's handle
+    SpinnerNotch.rotation.y = -Math.PI/4;
+
+    //add the notch to the top
+    Spinner.add(notch);
+    Spinner.add(SpinnerNotch);
+
+    Spinner.position.z = - roomDim.depth/2;
+    Spinner.position.y = roomDim.height/3;
+    Spinner.position.x = roomDim.width/2.75;
+    Spinner.rotation.x = Math.PI/2;
+
+    return Spinner;
+};
+// =============================================================================
+// Segment 4 - Hearth
+// =============================================================================
+
+// hearthArch: creates the hearth Arch
+// three parameters: width (integer), depth (integer), height (integer)
+//returns an Object3D
+function hearthArch(width, depth, height){
+    var arch = new THREE.Object3D();
+
+    //make half the curve
+    var doorDepthSeg = 1/3*depth*1/2;
+    var topToBottom = [
+        [ [0,100,-100],[50,100,-100],[75,100,-100],[100, 100,-100]],
+        [ [0,70,-20], [21,70,-20], [42,70,-20],  [100,70,-20] ],
+        [ [0,25,0], [20,25,0], [40,25,0], [70,25,0]],
+        [ [0,0,0], [20,0,0], [40,0,0],[60,0,0]],
+    ];
+
+    var archGeom = new THREE.BezierSurfaceGeometry( topToBottom.reverse(), 10, 10 );
+    var archMaterial = new THREE.MeshPhongMaterial( { color: 0xffffff, side: THREE.DoubleSide} );
+    var archMesh = new THREE.Mesh(archGeom, archMaterial);
+
+    var archMesh2 = archMesh.clone();
+    archMesh2.scale.set(1,1,-1);
+    archMesh2.position.z = -200;
+    arch.add(archMesh);
+    arch.add(archMesh2);
+
+    arch.scale.set(-.5,1,.3);
+
+    return arch;
+}
+
+//createFireProps: creates the hearth Arch
+//one parameter: scaleObj (integer)
+// returns an Object3D
+function createFireProps(scaleObj){
+
+    var allProps = new THREE.Object3D();
+
+    function createPot(scaleFactor){
+        var pot = new THREE.Object3D();
+
+        //pot component; easier to create a composite object and scale up
+        //with the bezier curve as the handle
+        var potMat = new THREE.MeshPhongMaterial({ color: 0x000000, side: THREE.DoubleSide });
+        var potGeom = new THREE.SphereGeometry(10, 32, 32, 0, Math.PI * 2, 0, 2/3*Math.PI);
+        var potMesh = new THREE.Mesh(potGeom,potMat);
+        potMesh.rotation.z = Math.PI;
+        potMesh.position.y = 10;
+
+        //handle component, appropriated from some bezier curve work in class
+        var connectorCP = [ [-4,3,0],
+                    [-1,-1,0],
+                    [1,-1,0],
+                    [4,3,0] ];
+
+        function addCurve(cp,color) {
+            var geom = TW.createBezierCurve(cp,20);
+            var mesh = new THREE.Line( geom,
+                                       new THREE.LineBasicMaterial( { color: color, linewidth: 3 } ));
+            mesh.scale.set(2,3,2);
+            mesh.rotation.x = Math.PI;
+            mesh.position.y = 10*2.25;
+            pot.add(mesh);
+        }
+
+        addCurve(connectorCP,0x000000);
+
+        pot.add(potMesh);
+        pot.scale.set(scaleFactor,scaleFactor,scaleFactor);
+        return pot;
+    }
+
+    //createStand: creates the hearth Arch
+    //one parameter: width (integer), height (integer)
+    // returns an Object3D
+    function createStand(width,height) {
+          //create the object
+            var stand = new THREE.Object3D();
+
+            var standMat = new THREE.MeshPhongMaterial({ color: 0x000000, side: THREE.DoubleSide });
+            var vertGeom = new THREE.CylinderGeometry(width, width, height, 32, 32);
+            var vertMesh = new THREE.Mesh(vertGeom,standMat);
+            vertMesh.position.y = height/2;
+
+            var horizMesh = vertMesh.clone();
+            horizMesh.scale.set(1,.5,1);
+            horizMesh.position.y = height/4;
+            horizMesh.rotation.z = Math.PI/2;
+            horizMesh.position.y = height/1.25;
+            horizMesh.position.x = -height/8;
+
+            stand.add(vertMesh);
+            stand.add(horizMesh);
+
+            return stand;
+    }
+
+    //this function was taken from another js file
+    function createLog(radius, length){
+          var logGeom = new THREE.CylinderGeometry( radius, radius, length, 32);
+          var logMaterial = new THREE.MeshPhongMaterial( { color: 0x654321, side: THREE.DoubleSide });
+          var logMesh = new THREE.Mesh(logGeom, logMaterial);
+          logMesh.rotation.z = Math.PI/2;
+          return logMesh;
+    }
+
+    //adding and positioning the pot
+    var w = 3;
+    var h = 90;
+
+    var potObj = createPot(1.5);
+    potObj.position.y = h*.45;
+    potObj.position.x = -h*.25;
+    potObj.rotation.y = Math.PI/2;
+
+    var standObj = createStand(w,h);
+
+    //adding the log
+    var lw = 10;
+    var lh = 50;
+    var logObj = createLog(lw,lh);
+    logObj.position.y = lw;
+    logObj.position.z = lh*.5;
+    logObj.rotation.y = Math.PI/2;
+    allProps.add(logObj);
+
+    allProps.add(potObj);
+    allProps.add(standObj);
+    allProps.scale.set(scaleObj, scaleObj, scaleObj);
+
+    allProps.scale.set(scaleObj, scaleObj, scaleObj);
+    return allProps;
+}
+
+//makeHearthBase: make the hearth base
+//parameters: height (integer), width (integer)
+// returns an Object3D
+function makeHearthBase(height, width){
+        //make the parent object
+        var hearthBase = new THREE.Object3D();
+
+        var baseMaterial = new THREE.MeshPhongMaterial({ color: 0xF6F6F6, side: THREE.DoubleSide });
+
+        //make the half circle base
+        var roundGeom = new THREE.CylinderGeometry(width, width, height, 32, 32, false, 0, -Math.PI );
+        var roundMesh = new THREE.Mesh(roundGeom, baseMaterial);
+
+        roundMesh.scale.set (1.5,1,1);
+
+        var blockGeom = new THREE.BoxGeometry(width,height,2*width);
+        var blockMesh = new THREE.Mesh(blockGeom, baseMaterial);
+        blockMesh.position.x = width/2;
+
+        //make the props
+        var potObjects = createFireProps(.5);
+        potObjects.position.y = height/2;
+        potObjects.position.z = -width/4;
+        hearthBase.add(potObjects);
+
+
+        var arch = hearthArch(200, 200, 200);
+        arch.position.y = .5*height;
+        arch.position.x = width;
+        arch.position.z = width;
+        hearthBase.add(arch);
+
+        hearthBase.add(blockMesh);
+        hearthBase.add(roundMesh);
+
+        hearthBase.position.x = roomDim.width/2.5;
+        hearthBase.position.y = height/2 +.01;
+        hearthBase.position.z = roomDim.depth/3;
+
+        hearthBase.scale.set(.7,.7,.7);
+        return hearthBase;
+}
+
+// logBox: Creates Log Box besides hearth
+// three parameters: width (integer), height (integer), depth (integer)
+// returns an Object3D
+function logBox(width, height, depth){
+    //create the parent object
+    var logBox = new THREE.Object3D();
+    var logMaterial = new THREE.MeshPhongMaterial( { color: 0x654321, side: THREE.DoubleSide });
+
+    //createBox: create the outside Box
+    //there parameters: width (integer), height (integer), depth (integer)
+    // returns an Object3D
+    function createBox(width, height, depth){
+
+      //create the parent object
+      var boxGeom = new THREE.BoxGeometry(width, height, depth);
+      var materialArray = [];
+
+      var side = [THREE.DoubleSide, THREE.DoubleSide, THREE.BackSide, THREE.DoubleSide, THREE.DoubleSide, THREE.DoubleSide];
+
+      for(var i = 0; i < 6; i++) {
+        materialArray.push(new THREE.MeshPhongMaterial({
+                           color: 0x958351,
+                           side: side[i],
+          }));
+        };
+      var boxMaterial = new THREE.MeshFaceMaterial(materialArray);
+      var boxMesh = new THREE.Mesh(boxGeom, boxMaterial);
+
+      return boxMesh;
+    };
+
+    //createLog: creates individual logs
+    //two parameters: radius, length
+    // returns a mesh
+    function createLog(radius, length){
+          var logGeom = new THREE.CylinderGeometry( radius, radius, length, 32);
+          var logMaterial = new THREE.MeshPhongMaterial( { color: 0x654321, side: THREE.DoubleSide });
+          var logMesh = new THREE.Mesh(logGeom, logMaterial);
+          logMesh.rotation.z = Math.PI/2;
+          return logMesh;
+    }
+
+    //create box and logs
+    var box = createBox(width, height, depth);
+    var log1 = createLog(width/6, (4/5)*width);
+    var log2 = createLog(width/6, (4/5)*width);
+    var log3 = createLog(width/6, (4/5)*width);
+    var log4 = createLog(width/6, (4/5)*width);
+    var log5 = createLog(width/8, (4/5)*width);
+    var log6 = createLog(width/8, (4/5)*width);
+
+    //position logs
+    log1.position.set(0, height/4, width/6);
+    log2.position.set(0, height/4, -width/6);
+    log3.position.set(0, height/2, width/6);
+    log4.position.set(0, height/1.5, -width/12);
+    log4.rotation.y = Math.PI/8;
+    log4.rotation.z = Math.PI/2.5;
+    log5.position.set(width/2-width/6, 0, depth/2 + width/6);
+    log5.rotation.x = Math.PI/2;
+    log5.rotation.y = Math.PI/2;
+    log6.position.set(0, 0, depth/2 + width/6);
+    log6.rotation.x = Math.PI/2;
+    log6.rotation.y = -Math.PI/1.75;
+    log6.rotation.z = Math.PI/1.75;
+
+    //add box and logs to logBox object
+    logBox.add(box);
+    logBox.add(log1);
+    logBox.add(log2);
+    logBox.add(log3);
+    logBox.add(log4);
+    logBox.add(log5);
+    logBox.add(log6);
+
+    logBox.position.set(roomDim.width/2 - width/2 - 1, height/2, roomDim.depth/1.25);
+    return logBox;
+};
+// =============================================================================
+// Segment 5 - Room Decore
+// =============================================================================
+
+// pan: make pan hanging on wall
+// two parameters: width (integer), height (integer)
+// returns an Object3D
+function pan(width, height){
+    var pan = new THREE.Object3D();
+    var panMaterial = new THREE.MeshPhongMaterial( { color: 0x808080,
+                                                     side: THREE.DoubleSide,
+                                                     shininess: 100});
+
+    // createDish: make dish for the pan
+    // no parameters
+    // returns a mesh
+    function createDish(){
+        dishGeom = new THREE.CylinderGeometry( width/2+2, width/2, 3, 32, 32, true );
+        dishMesh = new THREE.Mesh(dishGeom, panMaterial);
+
+        return dishMesh;
+    };
+
+    // createDishBottom: make dish bottom for the pan
+    // no parameters
+    // returns an mesh
+    function createDishBottom(){
+        dishBGeom = new THREE.CylinderGeometry( width/2-0.1, width/2-0.1, 1, 32, 32 );
+        dishBMesh = new THREE.Mesh(dishBGeom, panMaterial);
+
+        return dishBMesh;
+    };
+
+    //createHandle: make the handle for the pan
+    // no parameters
+    // returns a mesh
+    function createHandle(){
+        handleGeom = new THREE.CylinderGeometry( 1, 1, height, 32 );
+        handleMesh = new THREE.Mesh(handleGeom, panMaterial);
+
+        return handleMesh;
+    };
+
+    //create pan segments
+    var dish = createDish();
+    var dishB = createDishBottom();
+    var handle = createHandle();
+
+    //position and rotate the pan segments
+    dishB.position.y = -1;
+    handle.position.x = height/2 + width/2;
+    handle.rotation.z = Math.PI/2;
+
+    //add pan segments to whole pan object
+    pan.add(dish);
+    pan.add(dishB);
+    pan.add(handle);
+
+    //position pan whole
+    pan.rotation.z = Math.PI/2;
+    pan.position.x = roomDim.width/2-2;
+    pan.position.y = roomDim.height/3;
+    pan.position.z = roomDim.depth;
+
+    return pan;
+};
+
+// carpet: create carpet by hearth
+// three parameters: height (integer), width (integer), texture (integer)
+// adds to scene for texturing
+function carpet(height, width, texture){
+    var carpetGeom = new THREE.PlaneGeometry(width, height);
+    var carpetMaterial = new THREE.MeshPhongMaterial({ color: 0xFFFFFF, side:THREE.DoubleSide, map:texture[0]});
+    var carpetMesh = new THREE.Mesh(carpetGeom, carpetMaterial);
+
+    scene.add(carpetMesh);
+
+    carpetMesh.rotation.x = Math.PI/2;
+    carpetMesh.position.y = 0.1;
+    carpetMesh.position.z = roomDim.depth/2;
+};
+
+// box: box by back wall
+//three paramters: height (integer), width (integer), depth (integer)
+// returns an Object3D
+function box(height, width, depth){
+    var box = new THREE.Object3D();
+    var boxGeom = new THREE.BoxGeometry( width, height, depth, 32, 32, true );
+    var boxMaterial = new THREE.MeshPhongMaterial( { color: 0x654321, side: THREE.DoubleSide });
+    var boxMesh = new THREE.Mesh(boxGeom, boxMaterial);
+
+    boxMesh.position.y = height/2;
+    box.add(boxMesh);
+
+    var cushionGeom = new THREE.CylinderGeometry(depth/2, depth/2, width, 32, 32, false, 0, Math.PI);
+    var cushionMat = new THREE.MeshPhongMaterial( { color: 0xFFFFFF, side: THREE.DoubleSide });
+    var cushionMesh = new THREE.Mesh(cushionGeom, cushionMat);
+
+    box.add(cushionMesh);
+    cushionMesh.scale.set(.25,1,1);
+    cushionMesh.rotation.z = Math.PI/2;
+    cushionMesh.position.y = height;
+
+    box.position.x;
+    box.position.y = height/20;
+    box.position.z = -roomDim.depth/2 + depth/2;
+
+    return box;
+};
+
+// chair: create chair on the carpet
+// one paramater: height (integer)
+// returns an Object3D
+function chair(height){
+    var chair = new THREE.Object3D();
+    var chairMaterial = new THREE.MeshPhongMaterial( { color: 0x654321, side: THREE.DoubleSide });
+
+    // createChairBack: create chair back
+    // no paramaters
+    // returns an Object3D
+    function createChairBack(){
+        //Object3D to add to the components of the chair back
+        var chairBack = new THREE.Object3D();
+
+        var backLGeom = new THREE.BoxGeometry(height/10, height/2, height/10);
+        var backLMesh = new THREE.Mesh(backLGeom, chairMaterial);
+        chairBack.add(backLMesh);
+
+        var backRGeom = new THREE.BoxGeometry(height/12, height/2, height/12);
+        var backRMesh = new THREE.Mesh(backRGeom, chairMaterial);
+        backRMesh.position.x = height/2;
+        chairBack.add(backRMesh);
+
+        var backTallGeom = new THREE.BoxGeometry(height/2, height/6, height/12);
+        var backTallMesh = new THREE.Mesh(backTallGeom, chairMaterial);
+        backTallMesh.position.x = height/4;
+        backTallMesh.position.y = height/8;
+        chairBack.add(backTallMesh);
+
+        var backShortGeom = new THREE.BoxGeometry(height/2, height/12, height/12);
+        var backShortMesh = new THREE.Mesh(backShortGeom, chairMaterial);
+        backShortMesh.position.x = height/4;
+        backShortMesh.position.y = -height/12;
+        chairBack.add(backShortMesh);
+
+        return chairBack;
+    };
+
+    // createChairSeat: create chair seat
+    // no paramaters
+    // returns a mesh
+    function createChairSeat(){
+        var seatGeom = new THREE.BoxGeometry(height/2 + height/12, height/12, height/2);
+        var seatMesh = new THREE.Mesh(seatGeom, chairMaterial);
+
+        return seatMesh
+    };
+
+    // createChairLegs: create chair legs
+    // no paramaters
+    // returns an Object3D
+    function createChairLegs(){
+        //Object3D for elements of the chair legs
+        var chairLegs = new THREE.Object3D();
+
+        //legs
+        var legBackLeftGeom = new THREE.CylinderGeometry(height/24, height/24, height/2, 32, 32);
+        var legBackLeftMesh = new THREE.Mesh(legBackLeftGeom, chairMaterial);
+        legBackLeftMesh.rotation.x = Math.PI/16;
+        chairLegs.add(legBackLeftMesh);
+
+        var legBackRightGeom = new THREE.CylinderGeometry(height/24, height/24, height/2, 32, 32);
+        var legBackRightMesh = new THREE.Mesh(legBackRightGeom, chairMaterial);
+        legBackRightMesh.position.x = height/2;
+        legBackRightMesh.rotation.x = Math.PI/16;
+        chairLegs.add(legBackRightMesh);
+
+        var legFrontLeftGeom = new THREE.CylinderGeometry(height/24, height/24, height/2, 32, 32);
+        var legFrontLeftMesh = new THREE.Mesh(legFrontLeftGeom, chairMaterial);
+        legFrontLeftMesh.position.z = height/2;
+        legFrontLeftMesh.rotation.x = -Math.PI/16;
+        chairLegs.add(legFrontLeftMesh);
+
+        var legFrontRightGeom = new THREE.CylinderGeometry(height/24, height/24, height/2, 32, 32);
+        var legFrontRightMesh = new THREE.Mesh(legFrontRightGeom, chairMaterial);
+        legFrontRightMesh.position.x = height/2;
+        legFrontRightMesh.position.z = height/2;
+        legFrontRightMesh.rotation.x = -Math.PI/16;
+        chairLegs.add(legFrontRightMesh);
+
+        //bars
+        var backBarGeom = new THREE.CylinderGeometry(height/24, height/24, height/2, 32, 32);
+        var backBarMesh = new THREE.Mesh(backBarGeom, chairMaterial);
+        backBarMesh.position.x = height/4;
+        backBarMesh.rotation.x = Math.PI/2;
+        backBarMesh.rotation.z = Math.PI/2;
+        chairLegs.add(backBarMesh);
+
+        var frontBarGeom = new THREE.CylinderGeometry(height/24, height/24, height/2, 32, 32);
+        var frontBarMesh = new THREE.Mesh(frontBarGeom, chairMaterial);
+        frontBarMesh.position.x = height/4;
+        frontBarMesh.position.z = height/2;
+        frontBarMesh.rotation.z = Math.PI/2;
+        chairLegs.add(frontBarMesh);
+
+        var leftBarGeom = new THREE.CylinderGeometry(height/24, height/24, height/2, 32, 32);
+        var leftBarMesh = new THREE.Mesh(leftBarGeom, chairMaterial);
+        leftBarMesh.position.z = height/4;
+        leftBarMesh.rotation.x = Math.PI/2;
+        chairLegs.add(leftBarMesh);
+
+        var rightBarGeom = new THREE.CylinderGeometry(height/24, height/24, height/2, 32, 32);
+        var rightBarMesh = new THREE.Mesh(rightBarGeom, chairMaterial);
+        rightBarMesh.position.x = height/2;
+        rightBarMesh.position.z = height/4;
+        rightBarMesh.rotation.x = Math.PI/2;
+        chairLegs.add(rightBarMesh);
+
+        return chairLegs;
+    };
+
+    //create chair segments
+    var chairBack = createChairBack();
+    var chairSeat = createChairSeat();
+    var chairLegs = createChairLegs();
+
+    //position and rotate chair segments
+    chairBack.rotation.x = -Math.PI/12;
+
+    chairSeat.position.x = height/4;
+    chairSeat.position.y = -height/4;
+    chairSeat.position.z = height/4;
+
+    chairLegs.position.y = -height/2;
+
+    //add chair segments to whole chair object
+    chair.add(chairBack);
+    chair.add(chairSeat);
+    chair.add(chairLegs);
+
+    //position chair object
+    chair.position.x = roomDim.width/12;
+    chair.position.y = height*0.75;
+    chair.position.z = roomDim.depth/2;
+    chair.rotation.y = Math.PI/2;
+
+    return chair;
+};
+
+// createClothedChair: create clothed chair
+// three parameters: width (integer), height (integer), depth (integer)
+// returns an Object3D
+function createClothedChair(width,height,depth){
+    var table = new THREE.Object3D();
+    var tableMat = new THREE.MeshPhongMaterial( { color: 0x654321, side: THREE.DoubleSide });
+
+    //top of the table
+    var tableTopGeom = new THREE.BoxGeometry(width,height,depth);
+    var tableMesh = new THREE.Mesh(tableTopGeom,tableMat);
+    tableMesh.position.y = height/2 + depth;
+    table.add(tableMesh);
+
+    //adding the legs
+    var tableLegGeom = new THREE.BoxGeometry(height,depth,height);
+    var tableLegMesh = new THREE.Mesh(tableLegGeom,tableMat);
+    tableLegMesh.position.y = depth/2;
+    tableLegMesh.position.x = -height/2 + width/2
+    var tableLegMesh2 = tableLegMesh.clone();
+    tableLegMesh2.position.x = -width/2 + height/2;
+
+    table.add(tableLegMesh2);
+    table.add(tableLegMesh);
+
+    var whiteGeom = new THREE.CylinderGeometry(depth/2, depth/2, width, 32, 32, false, 0, Math.PI);
+    var whiteMat = new THREE.MeshPhongMaterial( { color: 0xFFFFFF, side: THREE.DoubleSide });
+    var whiteMesh = new THREE.Mesh(whiteGeom,whiteMat);
+    whiteMesh.scale.set(2,1.25,1.25);
+    whiteMesh.position.y = depth/2;
+    whiteMesh.position.y = depth + height - 2;
+    whiteMesh.rotation.z = Math.PI/2;
+    table.add(whiteMesh);
+
+    table.position.z = - roomDim.depth/2 + depth/2 + 5;
+    table.position.x = -roomDim.width/3 + width/2 + .01;
+
+    return table;
+}

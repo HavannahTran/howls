@@ -1,0 +1,212 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title> Howl's Moving Castle </title>
+    <!-- all styling for the page in this link -->
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script src="libs/three.min.js"></script>
+    <!-- omit dat.gui and OrbitControls if you don't need them -->
+    <script src="libs/OrbitControls.js"></script>
+    <script src="libs/dat.gui.min.js"></script>
+    <script src="libs/tw.js"></script>
+  </head>
+<body>
+
+<div id = "title">
+  <h1>Howl's Moving Castle</h1>
+  <p> Click keys 1-5 to view different perspectives</p>
+</div>
+
+<script>
+// scene
+var scene = new THREE.Scene();
+var renderer = new THREE.WebGLRenderer();
+TW.mainInit(renderer,scene);
+
+// =============================================================================
+// Room Dimension Parameters
+
+var roomDim = {
+    width:200,
+    depth: 100,
+    height:125
+};
+
+//Prop dimension parameters
+var propDim = {
+  w1:35,
+  h1:25,
+  d1:50,
+  wbox:70,
+  hbox:20,
+  dbox:40,
+  shadeRadius:20,
+  height:40,
+  radiusCylinder:3,
+  radiusCup:5,
+  bowlRadius:20,
+  bheight:10,
+  toolRad1:5,
+  toolRad2:3,
+  theight:30
+};
+
+// =============================================================================
+// Texture Loader
+var loader = new THREE.TextureLoader();
+
+// =============================================================================
+// Camera
+
+// setup camera parameters
+//there are five different perspectives, so we have 5 different camera settings in these parameters
+var cameraParams = {
+    near: 5,
+    far: roomDim.depth*4,
+    fov: [75,75,75,75,75],
+    aspectRatio: 1900/950,
+
+    atX: [0,0,0,0,0],
+    atY: roomDim.height/3.75,
+    atZ: 0,
+
+    eyeX: [roomDim.width/15, roomDim.width/3,-roomDim.width/3,-roomDim.width/3,roomDim.width/4],
+    eyeY: [roomDim.height/3,roomDim.height/3,roomDim.height/3,roomDim.height/2,roomDim.height/1.25],
+    eyeZ: [1.75*roomDim.depth,1.5*roomDim.depth,1.25*roomDim.depth,roomDim.depth,1.25*roomDim.depth],
+
+    upX: [0,0,0,0,0],
+    upY: [1,1,1,1,1],
+    upZ: [0,0,0,0,0],
+};
+
+function setupCamera (cameraParameters, camNum) {
+    // set up an abbreviation
+    var cp = cameraParameters;
+
+    // create an initial camera with the desired shape
+    var camera = new THREE.PerspectiveCamera(cp.fov[camNum],
+                                             cp.aspectRatio,
+                                             cp.near,
+                                             cp.far);
+
+    // set the camera location and orientation
+    camera.position.set(cp.eyeX[camNum], cp.eyeY[camNum], cp.eyeZ[camNum]);
+    camera.up.set(cp.upX[camNum], cp.upY[camNum], cp.upZ[camNum]);
+    camera.fov = cp.fov[camNum];
+
+    camera.lookAt(new THREE.Vector3(cp.atX[camNum], cp.atY, cp.atZ));
+
+    // update camera
+    camera.updateProjectionMatrix();
+    return camera;
+}
+
+// create camera
+var camera = setupCamera(cameraParams, 0);
+scene.add(camera);
+
+//render
+function render() {
+    renderer.render(scene,camera);
+};
+
+//lag the renderer a bit so that the textures and all objects have time to load
+window.setTimeout(render,5000);
+
+// =============================================================================
+// UI CONTROLS
+// =============================================================================
+
+function selectSlide1(){
+    camera = setupCamera(cameraParams, 0);
+    render();
+}
+function selectSlide2(){
+    camera = setupCamera(cameraParams, 1);
+    render();
+}
+function selectSlide3(){
+    camera = setupCamera(cameraParams, 2);
+    render();
+}
+function selectSlide4(){
+    camera = setupCamera(cameraParams, 3);
+    render();
+}
+function selectSlide5(){
+    camera = setupCamera(cameraParams, 4);
+    render();
+}
+
+TW.setKeyboardCallback('1', selectSlide1, "select slide");
+TW.setKeyboardCallback('2', selectSlide2, "select slide");
+TW.setKeyboardCallback('3', selectSlide3, "select slide");
+TW.setKeyboardCallback('4', selectSlide4, "select slide");
+TW.setKeyboardCallback('5', selectSlide5, "select slide");
+
+
+</script>
+
+<!-- Load Room Section Files -->
+<script src="lighting.js"></script>
+<script src="howl/texture.js"></script>
+<script src="howl/section1.js"></script>
+<script src="howl/section2.js"></script>
+<script src="howl/section3.js"></script>
+<script src="howl/section4.js"></script>
+<script src="howl/section5.js"></script>
+
+
+<script>
+  //section1
+  var chandelier = chandelier(30);
+  scene.add(chandelier);
+
+  var ceiling = ceilingBeams(roomDim.width, 2, 10);
+  scene.add(ceiling);
+
+  //section2
+  var stool = stool(20);
+  scene.add(stool);
+
+  var table = table(50,50,70, propDim);
+  scene.add(table);
+
+  //section3
+  var room = room(roomDim.width,roomDim.depth,roomDim.height);
+  scene.add(room);
+
+  var steps = steps(roomDim.width,roomDim.height,roomDim.depth);
+  scene.add(steps);
+
+  var railing = createRailing();
+  scene.add(railing);
+
+  var spinner = createSpinner(3,5);
+  scene.add(spinner);
+
+  //section4
+  var hearthBase = makeHearthBase(20, 30);
+  scene.add(hearthBase);
+
+  var logBox = logBox(25, 15, 20);
+  scene.add(logBox);
+
+  //section5
+  var pan = pan(20,50);
+  scene.add(pan);
+
+  var box = box(15,30,30);
+  scene.add(box);
+
+  var chair = chair(40);
+  scene.add(chair);
+
+  var clothedChair = createClothedChair(30,6,18);
+  scene.add(clothedChair);
+
+</script>
+
+</body>
+</html>
